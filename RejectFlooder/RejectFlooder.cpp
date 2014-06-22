@@ -1,21 +1,9 @@
-// RejectFlooder.cpp : Defines the entry point for the console application.
-//
-#ifndef UNICODE
-#define UNICODE
-#endif
-
-#define WIN32_LEAN_AND_MEAN
-
 #include "stdafx.h"
 #include <winsock2.h>
 #include <Ws2tcpip.h>
 #include <stdio.h>
 
-// Link with ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
-
-#define DEFAULT_BUFLEN 512
-
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -25,9 +13,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	SOCKET ConnectSocket = INVALID_SOCKET;
 	struct sockaddr_in clientService;
 
-	int recvbuflen = DEFAULT_BUFLEN;
-	char *sendbuf = "Client: sending data test";
-	char recvbuf[DEFAULT_BUFLEN] = "";
+	int recvbuflen = 8192;
+	char *sendbuf = "{\"id\": 0, \"method\": \"mining.subscribe\", \"params\": [\"cgminer/3.7.3\"]}\n";
+	char recvbuf[8192] = "";
 
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (iResult != NO_ERROR) {
@@ -43,7 +31,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	clientService.sin_family = AF_INET;
 	clientService.sin_addr.s_addr = inet_addr("185.18.148.41");	
-	clientService.sin_port = (23399);
+	clientService.sin_port = htons(23399);
 
 	iResult = connect(ConnectSocket, (SOCKADDR*)&clientService, sizeof(clientService));
 	if (iResult == SOCKET_ERROR) {
@@ -63,14 +51,6 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	printf("Bytes Sent: %d\n", iResult);
 
-	iResult = shutdown(ConnectSocket, SD_SEND);
-	if (iResult == SOCKET_ERROR){
-		wprintf(L"shutdown failed with error: %d\n", WSAGetLastError());
-		closesocket(ConnectSocket);
-		WSACleanup();
-		return 1;
-	}
-
 	do {
 		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 		if (iResult > 0)
@@ -79,7 +59,20 @@ int _tmain(int argc, _TCHAR* argv[])
 			wprintf(L"Connection closed\n");
 		else
 			wprintf(L"recv failed with error: %d\n", WSAGetLastError());
+
+		if (iResult > 400) {
+			sendbuf = "{\"id\": 2, \"method\": \"mining.authorize\", \"params\": [\"philiar.1\", \"x\"]}\n";
+			iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+		}
 	} while (iResult > 0);
+
+	iResult = shutdown(ConnectSocket, SD_SEND);
+	if (iResult == SOCKET_ERROR){
+		wprintf(L"shutdown failed with error: %d\n", WSAGetLastError());
+		closesocket(ConnectSocket);
+		WSACleanup();
+		return 1;
+	}
 
 	iResult = closesocket(ConnectSocket);
 	if (iResult == SOCKET_ERROR) {
