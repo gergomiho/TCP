@@ -15,7 +15,6 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 #define DEFAULT_BUFLEN 512
-#define DEFAULT_PORT 23399
 
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -44,7 +43,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	clientService.sin_family = AF_INET;
 	clientService.sin_addr.s_addr = inet_addr("185.18.148.41");	
-	clientService.sin_port = (DEFAULT_PORT);
+	clientService.sin_port = (23399);
 
 	iResult = connect(ConnectSocket, (SOCKADDR*)&clientService, sizeof(clientService));
 	if (iResult == SOCKET_ERROR) {
@@ -90,7 +89,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	WSACleanup();
-	  
 	return 0;
 }
 
